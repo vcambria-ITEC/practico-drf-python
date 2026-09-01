@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Post-it Notes</title>
+    <link rel="stylesheet" href="{% static 'practicodrf/style.css' %}">
+</head>
+<body>
+    <div class="top-bar">
+        <h1>📌 Mis notas</h1>
+        <button id="logout-btn">Cerrar sesión</button>
+    </div>
+
+    <form id="note-form" class="board-form">
+        <input type="text" id="title" name="title" placeholder="Título" required maxlength="100">
+        <input type="text" id="content" name="content" placeholder="Contenido">
+        <select id="color" name="color">
+            <option value="yellow">Amarillo</option>
+            <option value="pink">Rosa</option>
+            <option value="blue">Celeste</option>
+            <option value="green">Verde</option>
+        </select>
+        <button type="submit">Agregar</button>
+    </form>
+
+    <div id="board" class="board"></div>
+
+    <script src="{% static 'practicodrf/app.js' %}"></script>
+    <script>initBoard();</script>
+</body>
+</html>

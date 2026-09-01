@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Post-it Notes — Registro</title>
+    <link rel="stylesheet" href="{% static 'practicodrf/style.css' %}">
+</head>
+<body>
+    <div class="auth-card">
+        <h1>📌 Crear cuenta</h1>
+        <div id="error-box" class="error"></div>
+        <form id="register-form">
+            <input type="text" id="username" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required minlength="6">
+            <button type="submit">Registrarme</button>
+        </form>
+        <p>¿Ya tenés cuenta? <a href="{% url 'login-page' %}">Ingresá</a></p>
+    </div>
+    <script src="{% static 'practicodrf/app.js' %}"></script>
+    <script>initRegister();</script>
+</body>
+</html>
