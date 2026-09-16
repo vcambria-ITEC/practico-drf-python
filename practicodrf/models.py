@@ -9,6 +9,16 @@ COLOR_CHOICES = [
 ]
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Note(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -18,6 +28,7 @@ class Note(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField(blank=True)
     color = models.CharField(max_length=10, choices=COLOR_CHOICES, default='yellow')
+    tags = models.ManyToManyField(Tag, related_name='notes', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

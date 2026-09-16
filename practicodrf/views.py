@@ -1,44 +1,44 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404, render
-from rest_framework import status
+from django.shortcuts import render
+from rest_framework import generics, permissions, status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Note
-from .serializers import NoteSerializer, RegisterSerializer
+from .models import Note, Tag
+from .serializers import NoteSerializer, RegisterSerializer, TagSerializer
 
 
-@api_view(['GET', 'POST'])
-def note_list(request):
-    if request.method == 'GET':
-        notes = Note.objects.filter(owner=request.user)
-        serializer = NoteSerializer(notes, many=True)
-        return Response(serializer.data)
+class NoteListCreateView(generics.ListCreateAPIView):
+    serializer_class = NoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    serializer = NoteSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save(owner=request.user)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def get_queryset(self):
+        return Note.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def note_detail(request, pk):
-    note = get_object_or_404(Note, pk=pk, owner=request.user)
+class NoteDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = NoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    if request.method == 'GET':
-        serializer = NoteSerializer(note)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return Note.objects.filter(owner=self.request.user)
 
-    if request.method == 'PUT':
-        serializer = NoteSerializer(note, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
 
-    note.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+class TagListCreateView(generics.ListCreateAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class TagDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 @api_view(['POST'])
