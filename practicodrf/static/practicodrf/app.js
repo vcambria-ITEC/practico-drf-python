@@ -1,11 +1,17 @@
-const TOKEN_KEY = 'postit_token';
+const ACCESS_TOKEN_KEY = 'postit_access_token';
+const REFRESH_TOKEN_KEY = 'postit_refresh_token';
 
-function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
+function getAccessToken() {
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+function storeTokens(access, refresh) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, access);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
 }
 
 function requireAuth() {
-    if (!getToken()) {
+    if (!getAccessToken()) {
         window.location.href = '/login/';
     }
 }
@@ -13,13 +19,14 @@ function requireAuth() {
 async function apiRequest(url, options = {}) {
     const headers = options.headers || {};
     headers['Content-Type'] = 'application/json';
-    const token = getToken();
+    const token = getAccessToken();
     if (token) {
-        headers['Authorization'] = `Token ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
     }
     const response = await fetch(url, { ...options, headers });
     if (response.status === 401) {
-        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
         window.location.href = '/login/';
         return null;
     }
@@ -27,7 +34,8 @@ async function apiRequest(url, options = {}) {
 }
 
 function logout() {
-    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     window.location.href = '/login/';
 }
 
@@ -97,7 +105,7 @@ async function initLogin() {
         const password = document.getElementById('password').value;
         const errorBox = document.getElementById('error-box');
 
-        const response = await fetch('/api-token-auth/', {
+        const response = await fetch('/api/token/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password }),
@@ -109,7 +117,7 @@ async function initLogin() {
         }
 
         const data = await response.json();
-        localStorage.setItem(TOKEN_KEY, data.token);
+        storeTokens(data.access, data.refresh);
         window.location.href = '/';
     });
 }
@@ -135,7 +143,7 @@ async function initRegister() {
         }
 
         const data = await response.json();
-        localStorage.setItem(TOKEN_KEY, data.token);
+        storeTokens(data.access, data.refresh);
         window.location.href = '/';
     });
 }

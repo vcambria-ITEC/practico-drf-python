@@ -5,7 +5,7 @@ Aplicación de notas tipo post-it con login de usuario, hecha con Django + Djang
 ## Stack
 
 - Django 6.1
-- Django REST Framework (autenticación por Token)
+- Django REST Framework (autenticación con JWT vía `djangorestframework-simplejwt`, y SessionAuth de DRF)
 - SQLite (dev)
 - Gestor de entorno: [uv](https://docs.astral.sh/uv/)
 
@@ -36,23 +36,23 @@ Abrir `http://127.0.0.1:8000/register/` para crear un usuario, o `http://127.0.0
 
 | Método | URL | Descripción | Auth |
 |---|---|---|---|
-| POST | `/api/register/` | Crea un usuario y devuelve el token | No |
-| POST | `/api-token-auth/` | Login, devuelve el token | No |
+| POST | `/api/register/` | Crea un usuario y devuelve un par de tokens JWT | No |
+| POST | `/api/token/` | Login, devuelve `access` y `refresh` | No |
+| POST | `/api/token/refresh/` | Renueva el `access` a partir del `refresh` | No |
 | GET | `/api/notes/` | Lista las notas del usuario autenticado | Sí |
 | POST | `/api/notes/` | Crea una nota | Sí |
 | GET | `/api/notes/<id>/` | Detalle de una nota propia | Sí |
 | PUT / PATCH | `/api/notes/<id>/` | Edita una nota propia (PUT completo, PATCH parcial) | Sí |
 | DELETE | `/api/notes/<id>/` | Borra una nota propia | Sí |
 | GET | `/api/tags/` | Lista todos los tags | Sí |
-| POST | `/api/tags/` | Crea un tag | Sí |
 | GET | `/api/tags/<id>/` | Detalle de un tag | Sí |
-| PUT / PATCH | `/api/tags/<id>/` | Edita un tag | Sí |
-| DELETE | `/api/tags/<id>/` | Borra un tag | Sí |
 
-La autenticación es por Token: mandar el header `Authorization: Token <token>`.
+La autenticación es por JWT: mandar el header `Authorization: Bearer <access>`. Los tags se administran desde
+`/admin/` (el endpoint de la API es de solo lectura).
 
-Las vistas de `notes` y `tags` están implementadas con **Concrete Generic Views** de DRF
-(`ListCreateAPIView`, `RetrieveUpdateDestroyAPIView`).
+Las vistas de `notes` y `tags` están implementadas con **ViewSets** de DRF: `NoteViewSet` es un `ModelViewSet`
+(CRUD completo) y `TagViewSet` es un `ReadOnlyModelViewSet` (solo `list`/`retrieve`). El enrutamiento se arma con
+un `DefaultRouter` en `config/routers.py`.
 
 ## Ejemplo con curl
 
@@ -61,13 +61,12 @@ curl -X POST http://127.0.0.1:8000/api/register/ \
   -H "Content-Type: application/json" \
   -d '{"username":"ana","password":"unapass123"}'
 
-curl -X POST http://127.0.0.1:8000/api/tags/ \
+curl -X POST http://127.0.0.1:8000/api/token/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Token <TOKEN>" \
-  -d '{"name":"urgente"}'
+  -d '{"username":"ana","password":"unapass123"}'
 
 curl -X POST http://127.0.0.1:8000/api/notes/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Token <TOKEN>" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -d '{"title":"Comprar pan","content":"antes de las 20hs","color":"pink","tag_ids":[1]}'
 ```
